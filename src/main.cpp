@@ -11,6 +11,11 @@
 #include "mainwindow.h"
 #include "gammactl.h"
 
+
+#include <string.h>
+#include <comdef.h>
+#include <tlhelp32.h>
+
 #ifndef _WIN32
 #include <signal.h>
 void sig_handler(int signo)
@@ -32,11 +37,27 @@ void init()
 	logger->addAppender(&f);
 	config::read();
 	logger->setMaxSeverity(plog::Severity(cfg["log_level"]));
-
-	if (alreadyRunning()) {
-		LOGI << "Process already running";
-		exit(1);
-	}
+    if(alreadyRunning()){
+        HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+        PROCESSENTRY32 pEntry;
+        pEntry.dwSize = sizeof (pEntry);
+        BOOL hRes = Process32First(hSnapShot, &pEntry);
+        while(hRes){
+            LOGV << pEntry.th32ProcessID << pEntry.szExeFile;
+            if (wcscmp(pEntry.szExeFile, L"gammy.exe") == 0 && pEntry.th32ProcessID != GetCurrentProcessId())
+            {
+                HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0,
+                                              (DWORD) pEntry.th32ProcessID);
+                if (hProcess != NULL)
+                {
+                    TerminateProcess(hProcess, 9);
+                    CloseHandle(hProcess);
+                    LOGV << "killed duplicate process.";
+                }
+            }
+            hRes = Process32Next(hSnapShot, &pEntry);
+        }
+    }
 
 #ifndef _WIN32
 	signal(SIGINT, sig_handler);
