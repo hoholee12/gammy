@@ -1,3 +1,9 @@
+# HOW TO COMPILE ON WINDOWS
+
+download Qt Creator and build it from there. Qt Creator is an IDE just like visual studio.
+
+put it to release on build properties. check the build output path. build. profit??
+
 # ARCHIVED
 
 This project is not being worked on anymore. A new, linux-only version is being developed [here.](https://github.com/Fushko/gummy)
