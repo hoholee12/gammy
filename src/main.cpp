@@ -37,6 +37,14 @@ void init()
 	logger->addAppender(&f);
 	config::read();
 	logger->setMaxSeverity(plog::Severity(cfg["log_level"]));
+
+    wchar_t szAppPath[MAX_PATH];
+    std::wstring strAppName;
+    GetModuleFileName(0, szAppPath, MAX_PATH);
+    strAppName = szAppPath;
+    strAppName = strAppName.substr(strAppName.rfind(L"\\") + 1);
+    LOGV << strAppName << " is my name.";
+
     if(alreadyRunning()){
         HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
         PROCESSENTRY32 pEntry;
@@ -44,7 +52,8 @@ void init()
         BOOL hRes = Process32First(hSnapShot, &pEntry);
         while(hRes){
             LOGV << pEntry.th32ProcessID << pEntry.szExeFile;
-            if (wcscmp(pEntry.szExeFile, L"gammy.exe") == 0 && pEntry.th32ProcessID != GetCurrentProcessId())
+
+            if (wcscmp(pEntry.szExeFile, strAppName.c_str()) == 0 && pEntry.th32ProcessID != GetCurrentProcessId())
             {
                 HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0,
                                               (DWORD) pEntry.th32ProcessID);
